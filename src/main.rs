@@ -1,21 +1,27 @@
-use std::{fs::File, io::Read, io::Write};
+use std::{fs::File, io::BufRead, io::BufReader, io::Write};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let args = &args[1..];
 
     match args.len() {
-        0 => todo!("stream reader so that each line gets eval'd on <enter>"),
+        0 => {
+            let stdin = std::io::stdin();
+            let mut handle = stdin.lock();
+            find_palindromes(std::io::stdout(), &mut [&mut handle], &[None]).unwrap()
+        }
         n if n == 1 && args[0] == *"-" => {
-            find_palindromes(std::io::stdout(), &mut [std::io::stdin()], &[None]).unwrap()
+            let stdin = std::io::stdin();
+            let mut handle = stdin.lock();
+            find_palindromes(std::io::stdout(), &mut [&mut handle], &[None]).unwrap()
         }
         _ => {
-            let mut files: Vec<File> = vec![];
+            let mut files: Vec<BufReader<File>> = vec![];
             let mut sources: Vec<Option<&str>> = vec![];
 
             for arg in args {
                 let file = File::open(arg).unwrap();
-                files.push(file);
+                files.push(BufReader::new(file));
                 sources.push(Some(arg.as_str()));
             }
 
@@ -27,7 +33,7 @@ fn main() {
 /// Finds palindromic strings in `strs` and prints them to `w`.
 fn find_palindromes(
     mut w: impl Write,
-    readers: &mut [impl Read],
+    readers: &mut [impl BufRead],
     sources: &[Option<&str>],
 ) -> std::io::Result<()> {
     if readers.len() != sources.len() {
@@ -35,10 +41,9 @@ fn find_palindromes(
     }
 
     for (i, r) in readers.iter_mut().enumerate() {
-        let mut str = String::new();
-        r.read_to_string(&mut str)?;
-        for (j, line) in str.lines().enumerate() {
-            if is_palindrome(line) {
+        for (j, maybe_line) in r.lines().enumerate() {
+            let line = maybe_line?;
+            if is_palindrome(line.trim()) {
                 match sources[i] {
                     Some(source) => writeln!(w, "{}:{}:{}", source, j, line)?,
                     None => writeln!(w, "{}:{}", j, line)?,
