@@ -1,19 +1,27 @@
 use std::{fs::File, io::Read, io::Write};
 
 fn main() {
-    // TODO(wperron) support reading from stdin
     let args: Vec<String> = std::env::args().collect();
     let args = &args[1..];
-    let mut files: Vec<File> = vec![];
-    let mut sources: Vec<Option<&str>> = vec![];
 
-    for arg in args {
-        let file = File::open(arg).unwrap();
-        files.push(file);
-        sources.push(Some(arg.as_str()));
+    match args.len() {
+        0 => todo!("stream reader so that each line gets eval'd on <enter>"),
+        n if n == 1 && args[0] == *"-" => {
+            find_palindromes(std::io::stdout(), &mut [std::io::stdin()], &[None]).unwrap()
+        }
+        _ => {
+            let mut files: Vec<File> = vec![];
+            let mut sources: Vec<Option<&str>> = vec![];
+
+            for arg in args {
+                let file = File::open(arg).unwrap();
+                files.push(file);
+                sources.push(Some(arg.as_str()));
+            }
+
+            find_palindromes(std::io::stdout(), &mut files, &sources).unwrap()
+        }
     }
-
-    find_palindromes(std::io::stdout(), &mut files, &sources).unwrap();
 }
 
 /// Finds palindromic strings in `strs` and prints them to `w`.
