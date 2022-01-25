@@ -1,18 +1,19 @@
-use std::{io::Read, io::Write, fs::File};
+use std::{fs::File, io::Read, io::Write};
 
 fn main() {
+    // TODO(wperron) support reading from stdin
     let args: Vec<String> = std::env::args().collect();
     let args = &args[1..];
     let mut files: Vec<File> = vec![];
     let mut sources: Vec<Option<&str>> = vec![];
 
-    // let file = std::fs::File::open("/usr/share/dict/american-english").unwrap();
-    // find_palindromes(
-    //     std::io::stdout(),
-    //     &mut [file],
-    //     &[Some("/usr/share/dict/american-english")],
-    // )
-    // .unwrap();
+    for arg in args {
+        let file = File::open(arg).unwrap();
+        files.push(file);
+        sources.push(Some(arg.as_str()));
+    }
+
+    find_palindromes(std::io::stdout(), &mut files, &sources).unwrap();
 }
 
 /// Finds palindromic strings in `strs` and prints them to `w`.
@@ -32,7 +33,7 @@ fn find_palindromes(
             if is_palindrome(line) {
                 match sources[i] {
                     Some(source) => writeln!(w, "{}:{}:{}", source, j, line)?,
-                    None => writeln!(w, "unknown:{}:{}", j, line)?,
+                    None => writeln!(w, "{}:{}", j, line)?,
                 }
             }
         }
