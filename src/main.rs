@@ -1,13 +1,18 @@
-use std::{io::Read, io::Write};
+use std::{io::Read, io::Write, fs::File};
 
 fn main() {
-    let file = std::fs::File::open("/usr/share/dict/american-english").unwrap();
-    find_palindromes(
-        std::io::stdout(),
-        &mut [file],
-        &[Some("/usr/share/dict/american-english")],
-    )
-    .unwrap();
+    let args: Vec<String> = std::env::args().collect();
+    let args = &args[1..];
+    let mut files: Vec<File> = vec![];
+    let mut sources: Vec<Option<&str>> = vec![];
+
+    // let file = std::fs::File::open("/usr/share/dict/american-english").unwrap();
+    // find_palindromes(
+    //     std::io::stdout(),
+    //     &mut [file],
+    //     &[Some("/usr/share/dict/american-english")],
+    // )
+    // .unwrap();
 }
 
 /// Finds palindromic strings in `strs` and prints them to `w`.
